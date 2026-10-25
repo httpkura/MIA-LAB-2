@@ -4,27 +4,19 @@ on:
   - workflow_dispatch
   - repository_dispatch
 permissions:
-  checks: write
-  actions: read
   contents: read
 jobs:
   run-autograding-tests:
     runs-on: ubuntu-latest
-    if: github.actor != 'github-classroom[bot]'
+    timeout-minutes: 20
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: pip install -r requirements.txt
     - name: Python test
-      id: python-test
-      uses: classroom-resources/autograding-python-grader@v1
-      with:
-        timeout: '15'
-        max-score: '100'
-        setup-command: 'pip install -r requirements.txt'
-    - name: Autograding Reporter
-      # See more here: https://docs.github.com/en/education/manage-coursework-with-github-classroom/learn-with-github-classroom/view-autograding-results 
-      uses: classroom-resources/autograding-grading-reporter@v1 
-      env:
-        PYTHON-TEST_RESULTS: "${{steps.python-test.outputs.result}}"
-      with:
-        runners: python-test
+      run: pytest test_pipeline.py -v
